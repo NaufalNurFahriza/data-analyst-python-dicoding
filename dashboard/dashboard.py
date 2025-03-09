@@ -4,78 +4,67 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Judul Dashboard
-st.title("🚴‍♂️ Bike Sharing Dashboard")
+st.title("🚴‍♂️ Dashboard Analisis Data Bike Sharing")
 
-# Sidebar untuk memilih dataset
-st.sidebar.header("Pengaturan Dataset")
-dataset_choice = st.sidebar.selectbox(
-    "Pilih Dataset:",
-    ["Hourly Data", "Daily Data"]
-)
+# Sidebar untuk informasi pribadi
+st.sidebar.title("Proyek Akhir: Analisis Data Bike Sharing")
+st.sidebar.write("Nama: Naufal Nur Fahriza")
+st.sidebar.write("Email: naufalnurfahriza@gmail.com")
+st.sidebar.write("ID Laskar AI: a297ybf370")
 
 # Fungsi untuk memuat dataset
 @st.cache_data
-def load_data(dataset_choice):
-    if dataset_choice == "Hourly Data":
-        path = "data/hour.csv"  # Path ke dataset per jam
-    else:
-        path = "data/day.csv"  # Path ke dataset harian
-    data = pd.read_csv(path)
-    return data
+def load_data():
+    # Mengimpor dataset dari GitHub
+    url_day = "https://raw.githubusercontent.com/NaufalNurFahriza/data-analyst-python-dicoding/main/data/day.csv"
+    url_hour = "https://raw.githubusercontent.com/NaufalNurFahriza/data-analyst-python-dicoding/main/data/hour.csv"
+    df_day = pd.read_csv(url_day)
+    df_hour = pd.read_csv(url_hour)
+    return df_day, df_hour
 
 # Memuat dataset
-df = load_data(dataset_choice)
+df_day, df_hour = load_data()
 
-# Menampilkan dataset
-st.subheader("🔍 Data Awal")
-st.write(df.head())
+# Membersihkan dan memproses data
+df_day['dteday'] = pd.to_datetime(df_day['dteday'])
+df_hour['dteday'] = pd.to_datetime(df_hour['dteday'])
 
-# Statistik Deskriptif
-st.subheader("📈 Statistik Singkat")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric(label="Total Data", value=df.shape[0])
-with col2:
-    st.metric(label="Jumlah Kolom", value=df.shape[1])
-with col3:
-    st.metric(label="Rata-rata Penyewaan", value=f"{df['cnt'].mean():.2f}")
+# Membuat kategori suhu
+temp_bins = [0, 0.25, 0.5, 0.75, 1.0]
+temp_labels = ['Very Low', 'Low', 'Moderate', 'High']
+df_day['temp_category'] = pd.cut(df_day['temp'], bins=temp_bins, labels=temp_labels)
 
-# Visualisasi Data
-st.subheader("📊 Visualisasi Data")
-visualization_choice = st.selectbox(
-    "Pilih Visualisasi:",
-    ["Penyewaan Sepeda per Jam", "Pengaruh Suhu terhadap Penyewaan Sepeda"]
-)
+# Pertanyaan 1: Pada jam berapa penyewaan sepeda yang paling banyak dan paling sedikit?
+st.header("📊 Pertanyaan 1: Penyewaan Sepeda per Jam")
+hourly_rentals = df_hour.groupby('hr')['cnt'].sum().reset_index()
 
-if visualization_choice == "Penyewaan Sepeda per Jam":
-    st.write("### Penyewaan Sepeda per Jam")
-    hourly_rentals = df.groupby('hr')['cnt'].sum().reset_index()
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.barplot(x='hr', y='cnt', data=hourly_rentals, ax=ax, palette="viridis")
-    ax.set_xlabel("Jam (0-23)")
-    ax.set_ylabel("Jumlah Penyewaan")
-    ax.set_title("Penyewaan Sepeda per Jam")
-    st.pyplot(fig)
+# Visualisasi untuk Pertanyaan 1
+fig1, ax1 = plt.subplots(figsize=(10, 6))
+sns.barplot(x='hr', y='cnt', data=hourly_rentals, ax=ax1, palette="viridis")
+ax1.set_xlabel("Jam (0-23)")
+ax1.set_ylabel("Jumlah Penyewaan")
+ax1.set_title("Penyewaan Sepeda per Jam")
+st.pyplot(fig1)
 
-elif visualization_choice == "Pengaruh Suhu terhadap Penyewaan Sepeda":
-    st.write("### Pengaruh Suhu terhadap Penyewaan Sepeda")
-    # Membuat kategori suhu
-    df['temp_category'] = pd.cut(df['temp'], bins=[0, 0.25, 0.5, 0.75, 1.0], labels=["Very Low", "Low", "Moderate", "High"])
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.boxplot(x='temp_category', y='cnt', data=df, ax=ax, palette="coolwarm")
-    ax.set_xlabel("Kategori Suhu")
-    ax.set_ylabel("Jumlah Penyewaan")
-    ax.set_title("Pengaruh Suhu terhadap Penyewaan Sepeda")
-    st.pyplot(fig)
+# Menampilkan jam dengan penyewaan terbanyak dan terdikit
+st.write("### Jam dengan Penyewaan Terbanyak")
+st.write(hourly_rentals.sort_values('cnt', ascending=False).head())
 
-# Filter Data
-st.subheader("🎯 Filter Data")
-with st.expander("Filter Berdasarkan Hari"):
-    selected_day = st.selectbox("Pilih Hari:", df["weekday"].unique())
-    filtered_data = df[df["weekday"] == selected_day]
-    st.write(filtered_data)
+st.write("### Jam dengan Penyewaan Terdikit")
+st.write(hourly_rentals.sort_values('cnt', ascending=True).head())
 
-with st.expander("Filter Berdasarkan Musim"):
-    selected_season = st.selectbox("Pilih Musim:", df["season"].unique())
-    filtered_data = df[df["season"] == selected_season]
-    st.write(filtered_data)
+# Pertanyaan 2: Bagaimana pengaruh suhu terhadap peminjaman sepeda?
+st.header("🌡️ Pertanyaan 2: Pengaruh Suhu terhadap Penyewaan Sepeda")
+
+# Visualisasi untuk Pertanyaan 2
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+sns.boxplot(x='temp_category', y='cnt', data=df_day, ax=ax2, palette="coolwarm")
+ax2.set_xlabel("Kategori Suhu")
+ax2.set_ylabel("Jumlah Penyewaan")
+ax2.set_title("Pengaruh Suhu terhadap Penyewaan Sepeda")
+st.pyplot(fig2)
+
+# Menampilkan rata-rata penyewaan berdasarkan kategori suhu
+st.write("### Rata-rata Penyewaan Berdasarkan Kategori Suhu")
+temp_category_rentals = df_day.groupby('temp_category')['cnt'].mean().reset_index()
+st.write(temp_category_rentals)
