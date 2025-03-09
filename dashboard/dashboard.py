@@ -79,3 +79,19 @@ st.write(hourly_rentals.sort_values('cnt', ascending=False).head())
 
 st.write("### Tabel Jam dengan Penyewaan Terdikit")
 st.write(hourly_rentals.sort_values('cnt', ascending=True).head())
+
+# Pertanyaan 2: Bagaimana pengaruh suhu terhadap peminjaman sepeda?
+st.header("🌡️ Pertanyaan 2: Pengaruh Suhu terhadap Penyewaan Sepeda")
+
+# Visualisasi untuk Pertanyaan 2
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+sns.boxplot(x='temp_category', y='cnt', data=df_day, ax=ax2, palette="coolwarm")
+ax2.set_xlabel("Kategori Suhu")
+ax2.set_ylabel("Jumlah Penyewaan")
+ax2.set_title("Pengaruh Suhu terhadap Penyewaan Sepeda")
+st.pyplot(fig2)
+
+# Menampilkan rata-rata penyewaan berdasarkan kategori suhu
+st.write("### Rata-rata Penyewaan Berdasarkan Kategori Suhu")
+temp_category_rentals = df_day.groupby('temp_category')['cnt'].mean().reset_index()
+st.write(temp_category_rentals)
