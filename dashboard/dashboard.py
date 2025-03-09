@@ -83,6 +83,11 @@ st.write(hourly_rentals.sort_values('cnt', ascending=True).head())
 # Pertanyaan 2: Bagaimana pengaruh suhu terhadap peminjaman sepeda?
 st.header("🌡️ Pertanyaan 2: Pengaruh Suhu terhadap Penyewaan Sepeda")
 
+# Membuat kategori suhu
+temp_bins = [0, 0.25, 0.5, 0.75, 1.0]
+temp_labels = ['Very Low', 'Low', 'Moderate', 'High']
+df_day['temp_category'] = pd.cut(df_day['temp'], bins=temp_bins, labels=temp_labels)
+
 # Visualisasi untuk Pertanyaan 2
 fig2, ax2 = plt.subplots(figsize=(10, 6))
 sns.boxplot(x='temp_category', y='cnt', data=df_day, ax=ax2, palette="coolwarm")
